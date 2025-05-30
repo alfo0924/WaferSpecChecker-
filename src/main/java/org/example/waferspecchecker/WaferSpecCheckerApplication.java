@@ -50,9 +50,9 @@ public class WaferSpecCheckerApplication {
     }
 
     public static boolean checkParameterSpec(TestParameter param) {
-        if (param.name.contains("Voltage")) {
+        if (param.name != null && param.name.toLowerCase().contains("voltage")) {
             return param.value >= VOLTAGE_MIN && param.value <= VOLTAGE_MAX;
-        } else if (param.name.contains("Current")) {
+        } else if (param.name != null && param.name.toLowerCase().contains("current")) {
             return param.value >= CURRENT_MIN && param.value <= CURRENT_MAX;
         }
         return true;

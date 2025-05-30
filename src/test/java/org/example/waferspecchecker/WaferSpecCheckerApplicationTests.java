@@ -106,4 +106,86 @@ public class WaferSpecCheckerApplicationTests {
         }
         assertFalse(result); // 因為有一個參數超出範圍
     }
+
+    @Test
+    public void testMultipleParametersCombination() {
+        parameters.add(new WaferSpecCheckerApplication.TestParameter("Voltage_Y3", 2.5));
+        parameters.add(new WaferSpecCheckerApplication.TestParameter("Current_Y4", -30.0));
+        parameters.add(new WaferSpecCheckerApplication.TestParameter("Voltage_Y6", 4.0));
+        parameters.add(new WaferSpecCheckerApplication.TestParameter("Current_Y7", -15.0));
+
+        boolean result = true;
+        for (WaferSpecCheckerApplication.TestParameter param : parameters) {
+            result &= WaferSpecCheckerApplication.checkParameterSpec(param);
+        }
+        assertTrue(result);
+    }
+
+    @Test
+    public void testParameterNameNotVoltageOrCurrent() {
+        WaferSpecCheckerApplication.TestParameter param = new WaferSpecCheckerApplication.TestParameter("Resistance_R1", 100.0);
+        assertTrue(WaferSpecCheckerApplication.checkParameterSpec(param));
+    }
+
+    @Test
+    public void testExtremeValues() {
+        WaferSpecCheckerApplication.TestParameter voltageExtremeLow = new WaferSpecCheckerApplication.TestParameter("Voltage_Y3", Double.MIN_VALUE);
+        WaferSpecCheckerApplication.TestParameter voltageExtremeHigh = new WaferSpecCheckerApplication.TestParameter("Voltage_Y3", Double.MAX_VALUE);
+        WaferSpecCheckerApplication.TestParameter currentExtremeLow = new WaferSpecCheckerApplication.TestParameter("Current_Y4", Double.MIN_VALUE);
+        WaferSpecCheckerApplication.TestParameter currentExtremeHigh = new WaferSpecCheckerApplication.TestParameter("Current_Y4", Double.MAX_VALUE);
+
+        assertFalse(WaferSpecCheckerApplication.checkParameterSpec(voltageExtremeLow));
+        assertFalse(WaferSpecCheckerApplication.checkParameterSpec(voltageExtremeHigh));
+        assertFalse(WaferSpecCheckerApplication.checkParameterSpec(currentExtremeLow));
+        assertFalse(WaferSpecCheckerApplication.checkParameterSpec(currentExtremeHigh));
+    }
+
+    @Test
+    public void testParameterNameCaseSensitivity() {
+        WaferSpecCheckerApplication.TestParameter voltageLowerCase = new WaferSpecCheckerApplication.TestParameter("voltage_y3", 3.0);
+        WaferSpecCheckerApplication.TestParameter currentLowerCase = new WaferSpecCheckerApplication.TestParameter("current_y4", -20.0);
+        WaferSpecCheckerApplication.TestParameter voltageMixedCase = new WaferSpecCheckerApplication.TestParameter("VoLtAgE_Y3", 3.5);
+
+        assertTrue(WaferSpecCheckerApplication.checkParameterSpec(voltageLowerCase)); // 修正後忽略大小寫，應通過
+        assertTrue(WaferSpecCheckerApplication.checkParameterSpec(currentLowerCase)); // 修正後忽略大小寫，應通過
+        assertTrue(WaferSpecCheckerApplication.checkParameterSpec(voltageMixedCase)); // 包含"voltage"，應通過
+    }
+
+    @Test
+    public void testLargeNumberOfParameters() {
+        for (int i = 0; i < 100; i++) {
+            parameters.add(new WaferSpecCheckerApplication.TestParameter("Voltage_Y" + i, 3.0));
+            parameters.add(new WaferSpecCheckerApplication.TestParameter("Current_Y" + i, -20.0));
+        }
+
+        boolean result = true;
+        for (WaferSpecCheckerApplication.TestParameter param : parameters) {
+            result &= WaferSpecCheckerApplication.checkParameterSpec(param);
+        }
+        assertTrue(result);
+    }
+
+    @Test
+    public void testNegativeBoundaryValues() {
+        WaferSpecCheckerApplication.TestParameter voltageNegative = new WaferSpecCheckerApplication.TestParameter("Voltage_Y3", -2.3);
+        WaferSpecCheckerApplication.TestParameter currentJustAboveMin = new WaferSpecCheckerApplication.TestParameter("Current_Y4", -39.9);
+
+        assertFalse(WaferSpecCheckerApplication.checkParameterSpec(voltageNegative));
+        assertTrue(WaferSpecCheckerApplication.checkParameterSpec(currentJustAboveMin));
+    }
+
+    @Test
+    public void testZeroValues() {
+        WaferSpecCheckerApplication.TestParameter voltageZero = new WaferSpecCheckerApplication.TestParameter("Voltage_Y3", 0.0);
+        WaferSpecCheckerApplication.TestParameter currentZero = new WaferSpecCheckerApplication.TestParameter("Current_Y4", 0.0);
+
+        assertFalse(WaferSpecCheckerApplication.checkParameterSpec(voltageZero));
+        assertFalse(WaferSpecCheckerApplication.checkParameterSpec(currentZero));
+    }
+
+    @Test
+    public void testEmptyOrNullParameterName() {
+        WaferSpecCheckerApplication.TestParameter emptyName = new WaferSpecCheckerApplication.TestParameter("", 3.0);
+        assertTrue(WaferSpecCheckerApplication.checkParameterSpec(emptyName)); // 預設通過，因為不包含Voltage或Current
+    }
 }
